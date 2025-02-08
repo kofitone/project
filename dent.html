@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>School Management System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    form {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    form input, form select, form button {
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    form button {
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+
+    form button:hover {
+      background-color: #0056b3;
+    }
+
+    .student {
+      background: white;
+      margin-bottom: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .student h3 {
+      margin: 0;
+    }
+
+    .student ul {
+      padding-left: 20px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>School Management System</h1>
+
+    <!-- Add New Student -->
+    <form id="add-student-form">
+      <h2>Add New Student</h2>
+      <input type="text" id="student-name" placeholder="Name" required>
+      <input type="number" id="student-age" placeholder="Age" required>
+      <input type="number" id="student-grade" placeholder="Grade" required>
+      <input type="text" id="student-subjects" placeholder="Subjects (comma-separated)" required>
+      <button type="submit">Add Student</button>
+    </form>
+
+    <!-- Mark Attendance -->
+    <form id="mark-attendance-form">
+      <h2>Mark Attendance</h2>
+      <select id="attendance-student" required>
+        <option value="">Select Student</option>
+      </select>
+      <input type="date" id="attendance-date" required>
+      <select id="attendance-status" required>
+        <option value="">Select Status</option>
+        <option value="Present">Present</option>
+        <option value="Absent">Absent</option>
+      </select>
+      <button type="submit">Mark Attendance</button>
+    </form>
+
+    <!-- Students List -->
+    <div id="students-list">
+      <h2>Student List</h2>
+      <!-- Students will be displayed here -->
+    </div>
+  </div>
+
+  <script>
+    const apiUrl = 'http://localhost:5000';
+
+    // Fetch and display students
+    async function fetchStudents() {
+      const response = await fetch(`${apiUrl}/students`);
+      const students = await response.json();
+
+      const studentsList = document.getElementById('students-list');
+      const attendanceSelect = document.getElementById('attendance-student');
+      studentsList.innerHTML = '';
+      attendanceSelect.innerHTML = '<option value="">Select Student</option>';
+
+      students.forEach(student => {
+        // Add student to the list
+        const studentDiv = document.createElement('div');
+        studentDiv.className = 'student';
+        studentDiv.innerHTML = `
+          <h3>${student.name}</h3>
+          <p>Age: ${student.age}</p>
+          <p>Grade: ${student.grade}</p>
+          <p>Subjects: ${student.subjects.join(', ')}</p>
+          <h4>Attendance:</h4>
+          <ul>
+            ${student.attendance.map(a => `<li>${a.date}: ${a.status}</li>`).join('')}
+          </ul>
+        `;
+        studentsList.appendChild(studentDiv);
+
+        // Add student to the attendance dropdown
+        const option = document.createElement('option');
+        option.value = student._id;
+        option.textContent = student.name;
+        attendanceSelect.appendChild(option);
+      });
+    }
+
+    // Add new student
+    document.getElementById('add-student-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('student-name').value;
+      const age = document.getElementById('student-age').value;
+      const grade = document.getElementById('student-grade').value;
+      const subjects = document.getElementById('student-subjects').value.split(',').map(s => s.trim());
+
+      await fetch(`${apiUrl}/students`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, age, grade, subjects }),
+      });
+
+      document.getElementById('add-student-form').reset();
+      fetchStudents();
+    });
+
+    // Mark attendance
+    document.getElementById('mark-attendance-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const studentId = document.getElementById('attendance-student').value;
+      const date = document.getElementById('attendance-date').value;
+      const status = document.getElementById('attendance-status').value;
+
+      await fetch(`${apiUrl}/students/${studentId}/attendance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, status }),
+      });
+
+      document.getElementById('mark-attendance-form').reset();
+      fetchStudents();
+    });
+
+    // Initial fetch
+    fetchStudents();
+  </script>
+</body>
+</html>

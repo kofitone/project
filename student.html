@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        header {
+            background-color: #007bff;
+            color: #fff;
+            padding: 1rem 0;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 0.8rem 1.2rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .dashboard {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>School Management System</h1>
+</header>
+
+<div class="container">
+    <!-- Login Form -->
+    <div id="login-section">
+        <h2>Login</h2>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" required>
+        </div>
+        <button id="login-btn">Login</button>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="dashboard">
+        <h2>Welcome to Your Dashboard</h2>
+        <p id="welcome-message"></p>
+
+        <div id="reports-section">
+            <h3>Your Reports</h3>
+            <ul id="reports-list"></ul>
+        </div>
+
+        <div id="upload-report-section">
+            <h3>Upload a Report (Teachers Only)</h3>
+            <div class="form-group">
+                <label for="studentId">Student ID:</label>
+                <input type="text" id="studentId">
+            </div>
+            <div class="form-group">
+                <label for="subject">Subject:</label>
+                <input type="text" id="subject">
+            </div>
+            <div class="form-group">
+                <label for="grade">Grade:</label>
+                <input type="text" id="grade">
+            </div>
+            <div class="form-group">
+                <label for="comments">Comments:</label>
+                <input type="text" id="comments">
+            </div>
+            <button id="upload-btn">Upload Report</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const loginBtn = document.getElementById('login-btn');
+    const dashboard = document.getElementById('dashboard');
+    const loginSection = document.getElementById('login-section');
+    const reportsList = document.getElementById('reports-list');
+    const uploadBtn = document.getElementById('upload-btn');
+
+    loginBtn.addEventListener('click', async () => {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        const response = await fetch('http://localhost:3000/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('Login successful!');
+            loginSection.style.display = 'none';
+            dashboard.style.display = 'block';
+
+            // Fetch reports if the user is a student or parent
+            const userId = JSON.parse(atob(data.token.split('.')[1])).id;
+            fetchReports(userId, data.token);
+        } else {
+            alert(data.error || 'Login failed!');
+        }
+    });
+
+    async function fetchReports(studentId, token) {
+        const response = await fetch(`http://localhost:3000/reports/${studentId}`, {
+            headers: { Authorization: token }
+        });
+
+        if (response.ok) {
+            const reports = await response.json();
+            reportsList.innerHTML = reports.map(report => `
+                <li>
+                    ${report.subject}: ${report.grade} - ${report.comments}
+                </li>`
+            ).join('');
+        }
+    }
+
+    uploadBtn.addEventListener('click', async () => {
+        const studentId = document.getElementById('studentId').value;
+        const subject = document.getElementById('subject').value;
+        const grade = document.getElementById('grade').value;
+        const comments = document.getElementById('comments').value;
+
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:3000/reports', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: token
+            },
+            body: JSON.stringify({ studentId, subject, grade, comments })
+        });
+
+        if (response.ok) {
+            alert('Report uploaded successfully!');
+        } else {
+            alert('Failed to upload report');
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>first javascript</title>
+	
+</head>
+<body>
+	<ul id= "message"></ul>
+	
+	<p id="demo"></p>
+	<input id="textbox" type="number" >
+	
+	<button id="button">click</button>
+
+	<script >
+		var message= document.getElementById('message')
+		var text = document.getElementById("textbox")
+	
+		var button =document.getElementById("button")
+
+button.addEventListener("click",function () {
+	const password = 1234;
+const userpass = parseFloat(text.value)
+ var countlimit = 3;
+  var count = 0;
+  var errow =false;
+while (userpass != password && isNaN(userpass) && userpass != errow) {
+	if (count <= countlimit) {
+		document.getElementById("demo").innerHTML="refresh and enter pass again";
+		count++;
+	}else{
+		errow = true;
+	}
+
+	
+
+
+}
+);
+	</script>
+
+</body>
+</html>
